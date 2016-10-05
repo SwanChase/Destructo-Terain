@@ -1,152 +1,173 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
+public class PlayerController : MonoBehaviour
+{
 
-	public float velocity; // velocidade em x do player
-	public float bulletMaxInitialVelocity; // velocidade inicial da bala
-	public float maxTimeShooting; // maximo tempo atirando
-	public BoxCollider2D groundBC; // ref para o BoxCollider2D do chao
-	public GameObject bulletPrefab; // ref para o GameObject ( Pre-fabricado ) da nossa bala
+    public float velocity; // X speed player
+    public float bulletMaxInitialVelocity; // Bullet initial velocity
+    public float maxTimeShooting; // Maximum shooting time
+    public BoxCollider2D groundBC; // Ref is BoxCollider2D chao
+    public GameObject bulletPrefab; // Ref is GameObject (Pre-made) our bullet
 
-	private BoxCollider2D bc; // ref para o BoxCollider2D do player
-	private Rigidbody2D rb; // ref para o Rigidbody2D do player
-	private Animator an; // ref para o Animator do GameObject Body
-	private bool shooting; // o Player esta atirando?
-	private float timeShooting; // tempo que o player esta atirando
-	private Vector2 shootDirection; // ref para Vector2 normalizado que aponta na direçao do tiro do nosso player
+    private BoxCollider2D bc; // Ref is BoxCollider2D player
+    private Rigidbody2D rb; // Ref to Rigidbody2D player
+    private Animator an; // Ref for Animator GameObject Body
+    private bool shooting; // The player this shooting?
+    private float timeShooting; // Time that the player is shooting
+    private Vector2 shootDirection; // Ref to standard Vector2 pointing in the direction of our player shot
 
-	public GameObject shootingEffect; // ref para o GameObject que contem o efeito de particula do Player atirando
-	public Transform gunTransform; // ref para o Transform do GameObject Gun ( Gun contem a sprite da arma e da mira )
-	public Transform bodyTransform; // ref para o Transform do GameObject Body ( Body contem a sprite do corpo da minhoca )
-	public Transform bulletInitialTransform; // ref para o Transform que guarda a posiçao inicial da bala
+    public GameObject shootingEffect; // Ref to GameObject containing particle effect player throwing
+    public Transform gunTransform; // Ref to Transform the GameObject Gun (Gun contains sprite gun and aim)
+    public Transform bodyTransform; // Ref to Transform the GameObject Body (Body contains the sprite of the body of the worm)
+    public Transform bulletInitialTransform; // Ref to Transform guarding the initial position of the bullet
 
-	private bool targetting; // o player esta mirando?
+    private bool targetting; // The player is aiming?
 
-	// Use this for initialization
-	void Start () {
-		bc = GetComponent<BoxCollider2D>();
-		rb = GetComponent<Rigidbody2D>();
-		// Procurando por um component do tipo Animator nos GameObjects filhos de Player 
-		// Na verdade queremos o componente Animator que esta no GameObject Body
-		an = GetComponentInChildren<Animator>();
-		//gunTransform.eulerAngles = new Vector3(0f, 0f, -30f);
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		if( Input.GetKeyDown(KeyCode.W) ){ // A arma se torna visivel
-			targetting = true;
-			gunTransform.gameObject.SetActive(true);
-		}
-		if( targetting ){
-			UpdateTargetting();
-			UpdateShootDetection();
-			if( shooting )
-				UpdateShooting();
-		}
-		//gunTransform.localEulerAngles = new Vector3(0f, 0f, 30f);
-	}
+    // Use this for initialization
+    void Start()
+    {
+        bc = GetComponent<BoxCollider2D>();
+        rb = GetComponent<Rigidbody2D>();
+        // Looking for a component of type Animator in GameObjects children of Player
+        // In fact we want the Animator component that is in GameObject Body
+        an = GetComponentInChildren<Animator>();
+        //gunTransform.eulerAngles = new Vector3 (0f, 0f, -30f);
+    }
 
-	// Verifica se o Player começou atirar
-	void UpdateShootDetection(){
-		// GetKeyDown retorna true apenas no update em que o player aperta a tecla
-		// GetKey retorna true enquanto a tecla estiver pressionada
-		// GetKeyUp retorna true no update em que o player solta a tecla
-		if( Input.GetMouseButtonDown(0)){
-			shooting = true;
-			shootingEffect.SetActive(true);
-			timeShooting = 0f;
-		}
-	}
 
-	// Caso o Player esteja atirando, marca a qto tempo o Plyer esta atirando e verifica
-	// Se o Player parou de atirar ou se ja passou o tempo limite de atirar
-	// Tb chama a funçao Shoot(), que efetivamente efetua o disparo
-	void UpdateShooting(){
-		timeShooting += Time.deltaTime;
-		if(  Input.GetMouseButtonUp(0) || Input.GetKeyUp(KeyCode.Space) ){
-			shooting = false;
-			shootingEffect.SetActive(false);
-			Shoot();
-		}
-		if( timeShooting > maxTimeShooting ){
-			shooting = false;
-			shootingEffect.SetActive(false);
-			Shoot ();
-		}
-	}
+    // Update is called once per frame
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.W))// The weapon becomes visible
+        {
+            targetting = true;
+            gunTransform.gameObject.SetActive(true);
+        }
+        if (targetting)
+        {
+            UpdateTargetting();
+            UpdateShootDetection();
+            if (shooting)
+                UpdateShooting();
+        }
+        //gun Transform.localEulerAngles = new Vector3 (0f, 0f, 30f);
+    }
 
-	// Funçao que cria um GameObject Bullet a partir de bulletPrefab
-	// Posiciona nova bala criada
-	// E tb a direciona na direçao em que o player esta mirando:
-	// Vector2 que tem como origem o player e destino a posiçao do mouse
-	void Shoot(){
-		Vector3 mousePosScreen = Input.mousePosition;
-		Vector3 mousePosWorld = Camera.main.ScreenToWorldPoint(mousePosScreen);
-		Vector2 playerToMouse = new Vector2( mousePosWorld.x - transform.position.x,
-		                                    mousePosWorld.y - transform.position.y);
-		
-		playerToMouse.Normalize();
+    // Checks if the player begins shooting
+    void UpdateShootDetection()
+    {
+        // GetKeyDown // returns true only update when the player presses the button
+        // GetKey returns true while the key is pressed
+        // Returns true GetKeyUp the update on the player release the key
+        if (Input.GetMouseButtonDown(0))
+        {
+            shooting = true;
+            shootingEffect.SetActive(true);
+            timeShooting = 0f;
+        }
+    }
 
-		shootDirection = playerToMouse;
-		Debug.Log("Shoot!");
-		GameObject bullet = Instantiate(bulletPrefab);
-		bullet.transform.position = bulletInitialTransform.position;
-		bullet.GetComponent<Rigidbody2D>().velocity = shootDirection*bulletMaxInitialVelocity*(timeShooting/maxTimeShooting);
-	}
+    // If the player is shooting marks the qto time plyer this shooting and checks
+    // If the Player stopped firing or has passed the threshold of shooting time
+    // Tb calls the Shoot (), which effectively makes shooting
+    void UpdateShooting()
+    {
+        timeShooting += Time.deltaTime;
+        if (Input.GetMouseButtonUp(0) || Input.GetKeyUp(KeyCode.Space))
+        {
+            shooting = false;
+            shootingEffect.SetActive(false);
+            Shoot();
+        }
+        if (timeShooting > maxTimeShooting)
+        {
+            shooting = false;
+            shootingEffect.SetActive(false);
+            Shoot();
+        }
+    }
 
-	// Atualizando a rotaçao da arma e consequentemente da mira baseado em onde o player esta mirando
-	// Tb devemos atualizar a escala de bodyTransform para o corpo do nosso Player estar de acordo com a direçao em que o player esta mirando
-	void UpdateTargetting(){
-		Vector3 mousePosScreen = Input.mousePosition;
-		Vector3 mousePosWorld = Camera.main.ScreenToWorldPoint(mousePosScreen);
-		Vector2 playerToMouse = new Vector2( mousePosWorld.x - transform.position.x,
-		                                    mousePosWorld.y - transform.position.y);
+    // Function that creates a GameObject Bullet from bulletPrefab
+    // Positions created new bullet
+    // And tb directs the direction in which the player is targeting:
+    // Vector2 whose origin and destination the player the position of the mouse
+    void Shoot()
+    {
+        Vector3 mousePosScreen = Input.mousePosition;
+        Vector3 mousePosWorld = Camera.main.ScreenToWorldPoint(mousePosScreen);
+        Vector2 playerToMouse = new Vector2(mousePosWorld.x - transform.position.x,
+                                            mousePosWorld.y - transform.position.y);
 
-		playerToMouse.Normalize();
+        playerToMouse.Normalize();
 
-		float angle = Mathf.Asin(playerToMouse.y)*Mathf.Rad2Deg;
-		if( playerToMouse.x < 0f )
-			angle = 180-angle;
+        shootDirection = playerToMouse;
+        Debug.Log("Shoot!");
+        GameObject bullet = Instantiate(bulletPrefab);
+        bullet.transform.position = bulletInitialTransform.position;
+        bullet.GetComponent<Rigidbody2D>().velocity = shootDirection * bulletMaxInitialVelocity * (timeShooting / maxTimeShooting);
+    }
 
-		if( playerToMouse.x > 0f && bodyTransform.localScale.x > 0f ){
-			bodyTransform.localScale = new Vector3(-bodyTransform.localScale.x, bodyTransform.localScale.y, 0f);
-		}
-		else if( playerToMouse.x < 0f && bodyTransform.localScale.x < 0f ){
-			bodyTransform.localScale = new Vector3(-bodyTransform.localScale.x, bodyTransform.localScale.y, 0f);
-		}
+    // Upgrading the rotation of the gun and therefore the aim based on where the player is aiming
+    // Tb must update the bodyTransform scale for the body of our Player comply with the direction in which the player is aiming
+    void UpdateTargetting()
+    {
+        Vector3 mousePosScreen = Input.mousePosition;
+        Vector3 mousePosWorld = Camera.main.ScreenToWorldPoint(mousePosScreen);
+        Vector2 playerToMouse = new Vector2(mousePosWorld.x - transform.position.x,
+                                            mousePosWorld.y - transform.position.y);
 
-		gunTransform.localEulerAngles = new Vector3(0f, 0f, angle);
-	}
+        playerToMouse.Normalize();
 
-	// Atualizar a velocidade do nosso Player baseando-se nas teclas pressionadas
-	void UpdateMove(){
-		if( Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.LeftArrow) ){
-			rb.velocity = Vector2.right*velocity;
-			if( bodyTransform.localScale.x > 0f )
-				bodyTransform.localScale = new Vector3( -bodyTransform.localScale.x, bodyTransform.localScale.y, 0f );
+        float angle = Mathf.Asin(playerToMouse.y) * Mathf.Rad2Deg;
+        if (playerToMouse.x < 0f)
+            angle = 180 - angle;
 
-			an.SetBool("moving", true);
-		}
-		else if( !Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.LeftArrow) ){
-			rb.velocity = -Vector2.right*velocity;
-			if( bodyTransform.localScale.x < 0f )
-				bodyTransform.localScale = new Vector3( -bodyTransform.localScale.x, bodyTransform.localScale.y, 0f );
+        if (playerToMouse.x > 0f && bodyTransform.localScale.x > 0f)
+        {
+            bodyTransform.localScale = new Vector3(-bodyTransform.localScale.x, bodyTransform.localScale.y, 0f);
+        }
+        else if (playerToMouse.x < 0f && bodyTransform.localScale.x < 0f)
+        {
+            bodyTransform.localScale = new Vector3(-bodyTransform.localScale.x, bodyTransform.localScale.y, 0f);
+        }
 
-			an.SetBool("moving", true);
-		}
-		else{
-			rb.velocity = Vector2.zero;
-			an.SetBool("moving", false);
-		}
-	}
+        gunTransform.localEulerAngles = new Vector3(0f, 0f, angle);
+    }
 
-	// Funçao chamada em todo frame no qual ha colissao entre o Collider de Player e outro Collider
-	void OnCollisionStay2D( Collision2D other ){
-		// So atualizamos a velocidade em x do Player qdo este estiver nao chao
-		if( other.collider.tag == "Ground" ){
-			UpdateMove();
-		}
-	}
+    // Update the speed of our Player relying on the keypresses
+    void UpdateMove()
+    {
+        if (Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.A))
+        {
+            rb.velocity = Vector2.right * velocity;
+            if (bodyTransform.localScale.x > 0f)
+                bodyTransform.localScale = new Vector3(-bodyTransform.localScale.x, bodyTransform.localScale.y, 0f);
+
+            an.SetBool("moving", true);
+        }
+        else if (!Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.A))
+        {
+            rb.velocity = -Vector2.right * velocity;
+            if (bodyTransform.localScale.x < 0f)
+                bodyTransform.localScale = new Vector3(-bodyTransform.localScale.x, bodyTransform.localScale.y, 0f);
+
+            an.SetBool("moving", true);
+        }
+        else
+        {
+            rb.velocity = Vector2.zero;
+            an.SetBool("moving", false);
+        }
+    }
+
+    // Function call around frame in which there is collision between Collider Player and other Collider
+    void OnCollisionStay2D(Collision2D other)
+    {
+        // So we updated the speed at x Player qdo this is not ground
+        if (other.collider.tag == "Ground")
+        {
+            UpdateMove();
+        }
+    }
 }

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections;
 
-
+// basicly a Vector2 class 
 public class V2int{
 
 	private int xIP, yIP;
